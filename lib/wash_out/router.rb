@@ -86,7 +86,9 @@ module WashOut
     def soap_body(env)
       body = env['rack.input']
       body.rewind if body.respond_to? :rewind
-      body.respond_to?(:string) ? body.string : body.read
+      result = body.respond_to?(:string) ? body.string : body.read
+      Rails.logger.info(result)
+      result
     ensure
       body.rewind if body.respond_to? :rewind
     end
@@ -122,7 +124,9 @@ module WashOut
         end
       end
       env["action_dispatch.request.content_type"] = Mime[:soap]
-      controller.action(action).call(env)
+      result = controller.action(action).call(env)
+      Rails.logger.info(result[2].body.to_s)
+      result
     end
   end
 end

@@ -91,6 +91,10 @@ module WashOut
         @action_spec = self.class.soap_actions[soap_action]
         if @action_spec 
           Rails.logger.warn "Found SoapAction[#{soap_action}] from [#{request.env['wash_out.soap_action']}]"
+          @tns_response_name = @action_spec[:response_tag]
+          # Convert underscored, newworld response types to legacy Pascal-cased response types
+          # eg: "submitRPOrder_response" => "submitRPOrderResponse"
+          @tns_response_name = @tns_response_name.camelize(:lower)
         else
           Rails.logger.error "Couldn't find SoapAction[#{request.env['wash_out.soap_action']}]"
         end
@@ -99,6 +103,9 @@ module WashOut
       @operation   = soap_action
       result = { 'value' => result } unless result.is_a? Hash
       result = HashWithIndifferentAccess.new(result)
+
+      # If this wasn't set above when @action_spec had it's fallback action lookup performed
+      @tns_response_name ||= @action_spec[:response_tag]
 
       inject = lambda {|data, map|
         result_spec = []
